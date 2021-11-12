@@ -8,13 +8,15 @@ def index(request):
     #creating template
     template = loader.get_template('polls/index.html')
     #creating context with all the questions in the poll
-    context = {
-        'latest_question_list': latest_question_list,
-    }
+    context = {'latest_question_list': latest_question_list,}
+
     #output = ', '.join([q.question_text for q in latest_question_list])
 
     #return context as HttpResponse
-    return HttpResponse(template.render(context, request))
+    #return HttpResponse(template.render(context, request))
+
+    #return using render() shortcut
+    return render(request, 'polls/index.html', context)
 
 # Create your views here.
 def detail(request, question_id):
