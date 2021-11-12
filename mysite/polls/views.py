@@ -1,37 +1,71 @@
 from django.shortcuts import get_object_or_404, render
-from django.http import HttpResponse
-from .models import Question
+from django.http import HttpResponse,HttpResponseRedirect
+from .models import Choice, Question
 from django.http import Http404
-def index(request):
-    latest_question_list = Question.objects.order_by('-pub_date')[:5]
-    #creating template
-    #template = loader.get_template('polls/index.html')
-    #creating context with all the questions in the poll
-    context = {'latest_question_list': latest_question_list,}
+from django.urls import reverse
+from django.views import generic
 
-    #output = ', '.join([q.question_text for q in latest_question_list])
+class IndexView (generic.ListView):
+    template_name = 'polls/index.html'
+    context_object_name = 'latest_question_list'
 
-    #return context as HttpResponse
-    #return HttpResponse(template.render(context, request))
+    def get_queryset(self):
+        #return last five published questions.
+        return Question.objects.order_by('-pub_date')[:5]
 
-    #return using render() shortcut
-    return render(request, 'polls/index.html', context)
+class DetailView (generic.DetailView):
+    model = Question
+    template_name = 'polls/detail.html'
 
-# Create your views here.
-def detail(request, question_id):
-    # try:
-    #     question = Question.objects.get(pk=question_id)
-    # except Question.DoesNotExist:
-    #     raise Http404("Question does not exist in this poll.")
+class ResultsView (generic.DetailView):
+    model = Question
+    template_name = 'polls/results.html'
 
-    question = get_object_or_404(Question, pk=question_id)
 
-    return render(request, 'polls/detail.html', {'question':question})
-    #return HttpResponse("You're looking at question %s." %question_id)
+# def index(request):
+#     latest_question_list = Question.objects.order_by('-pub_date')[:5]
+#     #creating template
+#     #template = loader.get_template('polls/index.html')
+#     #creating context with all the questions in the poll
+#     context = {'latest_question_list': latest_question_list,}
 
-def results(request, question_id):
-    response = "You're looking at the results of question %s."
-    return HttpResponse(response % question_id)
+#     #output = ', '.join([q.question_text for q in latest_question_list])
+
+#     #return context as HttpResponse
+#     #return HttpResponse(template.render(context, request))
+
+#     #return using render() shortcut
+#     return render(request, 'polls/index.html', context)
+# # Create your views here.
+# def detail(request, question_id):
+#     # try:
+#     #     question = Question.objects.get(pk=question_id)
+#     # except Question.DoesNotExist:
+#     #     raise Http404("Question does not exist in this poll.")
+
+#     question = get_object_or_404(Question, pk=question_id)
+
+#     return render(request, 'polls/detail.html', {'question':question})
+#     #return HttpResponse("You're looking at question %s." %question_id)
+
+# def results(request, question_id):
+#     question = get_object_or_404(Question, pk=question_id)
+#     return render(request, 'polls/results.html', {'question': question})
 
 def vote(request, question_id):
+    question = get_object_or_404(Question, pk=question_id)
+    try:
+        selected_choice = question.choice_set.get(pk=request.POST['choice'])
+    except (KeyError, Choice.DoesNotExist):
+        return render(request, 'polls/detail.html',
+                        {'question': question,
+                        'error_message': "You didn't select a choice.",
+                        }
+                )
+    else:
+        selected_choice.votes +=1
+        selected_choice.save()
+
+        return HttpResponseRedirect(reverse('polls:results',args=(question.id,)))
+
     return HttpResponse("You're voting on question %s." %question_id)
