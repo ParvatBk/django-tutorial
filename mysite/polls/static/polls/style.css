@@ -1,0 +1,10 @@
+body{
+    background: white url("images/bg1.jpg") no-repeat;
+}
+li a {
+    color: green;
+}
+h1{
+    text-align: center;
+    color: blue;
+}
